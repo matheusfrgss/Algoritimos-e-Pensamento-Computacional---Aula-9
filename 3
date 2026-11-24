@@ -1,0 +1,79 @@
+#include <stdio.h>
+
+struct Cliente {
+    int conta_corrente;
+    char nome[50];
+    float saldo;
+};
+
+int main() {
+    struct Cliente cliente;
+    FILE *arquivo;
+
+    int conta, opcao;
+    float valor;
+
+    // Solicitar os dados
+    printf("Digite o numero da conta: ");
+    scanf("%d", &conta);
+
+    printf("1 - Deposito\n");
+    printf("2 - Saque\n");
+    printf("Escolha: ");
+    scanf("%d", &opcao);
+
+    printf("Digite o valor: ");
+    scanf("%f", &valor);
+
+    // Abrir arquivo para leitura e escrita
+    arquivo = fopen("clientes.bin", "rb+");
+
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo!\n");
+        return 1;
+    }
+
+    // Procurar a conta no arquivo
+    while (fread(&cliente, sizeof(struct Cliente), 1, arquivo) == 1) {
+
+        if (cliente.conta_corrente == conta) {
+
+            // Realizar deposito ou saque
+            if (opcao == 1) {
+                cliente.saldo += valor;
+            }
+            else if (opcao == 2) {
+                if (valor > cliente.saldo) {
+                    printf("Saldo insuficiente!\n");
+                    fclose(arquivo);
+                    return 0;
+                }
+
+                cliente.saldo -= valor;
+            }
+            else {
+                printf("Opcao invalida!\n");
+                fclose(arquivo);
+                return 0;
+            }
+
+            // Voltar ao inicio do registro atual
+            fseek(arquivo, -(long)sizeof(struct Cliente), SEEK_CUR);
+
+            // Gravar o registro atualizado
+            fwrite(&cliente, sizeof(struct Cliente), 1, arquivo);
+
+            printf("\nSaldo atualizado com sucesso!\n");
+            printf("Novo saldo: R$ %.2f\n", cliente.saldo);
+
+            fclose(arquivo);
+            return 0;
+        }
+    }
+
+    printf("Conta nao encontrada!\n");
+
+    fclose(arquivo);
+
+    return 0;
+}
