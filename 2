@@ -1,0 +1,68 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+struct Funcionario {
+    int id;
+    char cargo[30];
+    float salario;
+};
+
+int main() {
+    struct Funcionario *funcionario;
+    struct Funcionario *backup;
+    FILE *arquivo;
+
+    // Alocar memoria para o funcionario
+    funcionario = malloc(sizeof(struct Funcionario));
+
+    if (funcionario == NULL) {
+        printf("Erro na alocacao de memoria!\n");
+        return 1;
+    }
+
+    // Receber os dados
+    printf("Digite o ID: ");
+    scanf("%d", &funcionario->id);
+
+    printf("Digite o cargo: ");
+    scanf(" %29[^\n]", funcionario->cargo);
+
+    printf("Digite o salario: ");
+    scanf("%f", &funcionario->salario);
+
+    // Alocar memoria para o backup
+    backup = malloc(sizeof(struct Funcionario));
+
+    if (backup == NULL) {
+        printf("Erro na alocacao do backup!\n");
+        free(funcionario);
+        return 1;
+    }
+
+    // Copiar os dados do funcionario
+    memcpy(backup, funcionario, sizeof(struct Funcionario));
+
+    // Abrir arquivo binario
+    arquivo = fopen("backup_rh.bin", "wb");
+
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo!\n");
+        free(funcionario);
+        free(backup);
+        return 1;
+    }
+
+    // Salvar o backup
+    fwrite(backup, sizeof(struct Funcionario), 1, arquivo);
+
+    printf("\nBackup salvo com sucesso!\n");
+
+    fclose(arquivo);
+
+    // Liberar memoria
+    free(funcionario);
+    free(backup);
+
+    return 0;
+}
