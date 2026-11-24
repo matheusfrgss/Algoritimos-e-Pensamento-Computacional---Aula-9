@@ -1,0 +1,133 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+struct Professor {
+    int registro;
+    int horas_aula;
+};
+
+// Funcao para ler os professores do arquivo
+struct Professor *lerProfessores(int quantidade) {
+    FILE *arquivo;
+    struct Professor *professores;
+
+    professores = malloc(quantidade * sizeof(struct Professor));
+
+    if (professores == NULL) {
+        printf("Erro na alocacao de memoria!\n");
+        return NULL;
+    }
+
+    arquivo = fopen("folha.dat", "rb");
+
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo!\n");
+        free(professores);
+        return NULL;
+    }
+
+    // Ler todos os professores
+    if (fread(professores, sizeof(struct Professor),
+              quantidade, arquivo) != (size_t)quantidade) {
+        printf("Erro na leitura do arquivo!\n");
+        fclose(arquivo);
+        free(professores);
+        return NULL;
+    }
+
+    fclose(arquivo);
+
+    return professores;
+}
+
+int main() {
+    struct Professor *professores;
+    struct Professor *leitura;
+    void *buffer;
+
+    FILE *arquivo;
+
+    int quantidade, i;
+    size_t tamanho;
+
+    // Perguntar a quantidade
+    printf("Quantos professores deseja cadastrar? ");
+    scanf("%d", &quantidade);
+
+    if (quantidade <= 0) {
+        printf("Quantidade invalida!\n");
+        return 1;
+    }
+
+    // Alocar vetor de professores
+    professores = malloc(quantidade * sizeof(struct Professor));
+
+    if (professores == NULL) {
+        printf("Erro na alocacao!\n");
+        return 1;
+    }
+
+    // Receber os dados
+    for (i = 0; i < quantidade; i++) {
+        printf("\nProfessor %d\n", i + 1);
+
+        printf("Registro: ");
+        scanf("%d", &professores[i].registro);
+
+        printf("Horas de aula: ");
+        scanf("%d", &professores[i].horas_aula);
+    }
+
+    // Calcular o tamanho total em bytes
+    tamanho = quantidade * sizeof(struct Professor);
+
+    // Criar o buffer
+    buffer = malloc(tamanho);
+
+    if (buffer == NULL) {
+        printf("Erro na alocacao do buffer!\n");
+        free(professores);
+        return 1;
+    }
+
+    // Copiar todos os professores para o buffer
+    memcpy(buffer, professores, tamanho);
+
+    // Abrir arquivo binario
+    arquivo = fopen("folha.dat", "wb");
+
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo!\n");
+        free(professores);
+        free(buffer);
+        return 1;
+    }
+
+    // Gravar tudo de uma vez
+    fwrite(buffer, tamanho, 1, arquivo);
+
+    fclose(arquivo);
+
+    printf("\nDados salvos com sucesso!\n");
+
+    // Ler os professores do arquivo
+    leitura = lerProfessores(quantidade);
+
+    if (leitura != NULL) {
+        printf("\n===== PROFESSORES CADASTRADOS =====\n");
+
+        for (i = 0; i < quantidade; i++) {
+            printf("\nRegistro: %d\n", leitura[i].registro);
+            printf("Horas de aula: %d\n", leitura[i].horas_aula);
+        }
+
+        free(leitura);
+    }
+
+    // Liberar memoria
+    free(professores);
+    free(buffer);
+
+    return 0;
+}
